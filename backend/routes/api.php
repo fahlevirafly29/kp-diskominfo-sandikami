@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\RekapLayananController;
 use App\Http\Controllers\Api\AlasanPenolakanController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\API\UserController;
 
 // Pintu masuk umum (Tidak perlu Kartu Akses/Token)
 Route::post('/login', [AuthController::class, 'login']);
@@ -23,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/rekap-layanan', [RekapLayananController::class, 'index']);
     Route::get('/rekap-layanan/{id}', [RekapLayananController::class, 'show']);
     Route::get('/alasan-penolakan', [AlasanPenolakanController::class, 'index']);
+    
     // -------------------------------------------------------------
     // ZONA KHUSUS ADMIN (Hanya Admin yang bisa Merubah/Menghapus Data)
     // -------------------------------------------------------------
@@ -32,7 +34,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/rekap-layanan/{id}', [RekapLayananController::class, 'destroy']);
         Route::post('/alasan-penolakan', [AlasanPenolakanController::class, 'store']);
         Route::delete('/alasan-penolakan/{id}', [AlasanPenolakanController::class, 'destroy']);
-
-        });
+        Route::get('/users', [UserController::class, 'index']);
+        Route::post('/users', [UserController::class, 'store']);
+    });
 
 });

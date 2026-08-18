@@ -41,4 +41,5 @@ class AuthController extends Controller
             'message' => 'Username atau kata sandi salah'
         ], 401);
     }
+
 }
