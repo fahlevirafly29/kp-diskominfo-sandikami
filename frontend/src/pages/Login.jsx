@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
+import logoInstansi from '../assets/logo-diskominfo.jpg';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -36,10 +37,13 @@ export default function Login() {
     <div className="min-h-screen bg-slate-100 flex items-center justify-center">
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
         
+        {/* Pembungkus Judul & Logo (Ditengah) */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-blue-600 rounded-xl mx-auto mb-4 flex items-center justify-center text-white text-2xl">
-            🔐
-          </div>
+          <img 
+            src={logoInstansi} 
+            alt="Logo Instansi" 
+            className="w-24 h-auto mx-auto mb-4 object-contain" 
+          />
           <h1 className="text-2xl font-bold text-slate-800">Sandikami</h1>
           <p className="text-slate-500 text-sm mt-1">Silakan login untuk mengakses sistem</p>
         </div>
@@ -51,6 +55,7 @@ export default function Login() {
           </div>
         )}
 
+        {/* Form Login */}
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
