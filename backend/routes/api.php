@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\RekapLayananController;
 use App\Http\Controllers\Api\AlasanPenolakanController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\Api\SertifikatController; // Tambahan untuk Sertifikat
 
 // Pintu masuk umum (Tidak perlu Kartu Akses/Token)
 Route::post('/login', [AuthController::class, 'login']);
@@ -25,6 +26,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/rekap-layanan/{id}', [RekapLayananController::class, 'show']);
     Route::get('/alasan-penolakan', [AlasanPenolakanController::class, 'index']);
     
+    // Route GET Sertifikat agar grafik muncul di Dashboard Kadis dan Admin
+    Route::get('/sertifikat', [SertifikatController::class, 'index']);
+    
     // -------------------------------------------------------------
     // ZONA KHUSUS ADMIN (Hanya Admin yang bisa Merubah/Menghapus Data)
     // -------------------------------------------------------------
@@ -36,6 +40,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/alasan-penolakan/{id}', [AlasanPenolakanController::class, 'destroy']);
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
+        
+        // Route POST dan DELETE Sertifikat agar HANYA Admin yang bisa input & hapus data rekap
+        Route::post('/sertifikat', [SertifikatController::class, 'store']);
+        Route::delete('/sertifikat/{id}', [SertifikatController::class, 'destroy']); // <-- INI YANG BARU DITAMBAHKAN
     });
 
 });
