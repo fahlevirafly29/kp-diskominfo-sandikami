@@ -1,43 +1,44 @@
-# 🛡️ SANDIKAMI - Sistem Monitoring Sertifikat Elektronik
-> Dinas Komunikasi dan Informatika (Diskominfo) Kabupaten Garut
+PANDUAN LENGKAP: CLONE PROYEK, INSTALASI, DAN SETUP AKUN PERTAMA (TINKER) DI DEVICE BARU
 
-SANDIKAMI adalah aplikasi berbasis web yang dirancang untuk memantau, merekapitulasi, dan melaporkan aktivitas layanan sertifikat elektronik secara real-time dan transparan bagi pimpinan eksekutif.
+A. TENTANG PROYEK & TECH STACK
+SANDIKAMI adalah aplikasi berbasis web yang dirancang untuk memantau, merekapitulasi, dan melaporkan aktivitas layanan sertifikat elektronik secara real-time dan transparan bagi pimpinan eksekutif di lingkungan Dinas Komunikasi dan Informatika (Diskominfo) Kabupaten Garut.
+
+Tools & Tech Stack yang digunakan:
+- Backend: Laravel (RESTful API)
+- Frontend: React.js, Tailwind CSS, Recharts (Data Visualization)
+- Database: MySQL
+- Library Pendukung: Axios, html2pdf.js, Lucide React
 
 ---
 
-## 🛠️ Tech Stack
-* **Backend:** Laravel (RESTful API)
-* **Frontend:** React.js, Tailwind CSS, Recharts (Data Visualization)
-* **Library Pendukung:** Axios, html2pdf.js, Lucide React
-
----
-
-## 📂 Struktur Proyek (Monorepo / Terpisah)
-Pastikan direktori proyek Anda terstruktur dengan memisahkan folder frontend dan backend:
-kp-diskominfo/
+B. STRUKTUR DIREKTORI PROYEK
+Proyek ini menggunakan struktur monorepo terpisah antara API dan UI:
+kp-diskominfo-sandikami/
 ├── backend/   (Laravel API)
 └── frontend/  (React.js UI)
 
 ---
 
-## ⚙️ Panduan Instalasi & Menjalankan Proyek
+C. LANGKAH-LANGKAH INSTALASI DI DEVICE BARU
 
-Ikuti langkah-langkah di bawah ini secara berurutan untuk menjalankan sistem di komputer lokal Anda.
+1. CLONE REPOSITORY DARI GITHUB
+Buka terminal di komputer atau perangkat baru kamu, lalu jalankan perintah berikut untuk mengunduh kode proyek:
 
-### 1. Konfigurasi Backend (Laravel)
-Buka terminal, arahkan direktori ke folder backend:
+git clone https://github.com/fahlevirafly29/kp-diskominfo-sandikami.git
+cd kp-diskominfo-sandikami
+
+---
+
+2. SETUP SISI BACKEND (LARAVEL)
+Masuk ke folder backend, lalu siapkan lingkungan PHP dan instal dependensinya:
+
 cd backend
-
-Instal seluruh dependensi PHP menggunakan Composer:
 composer install
-
-Salin file konfigurasi lingkungan (.env):
 cp .env.example .env
-
-Generate kunci aplikasi (Application Key):
 php artisan key:generate
 
-Sesuaikan konfigurasi database Anda di dalam file .env:
+Buka file .env yang baru saja disalin menggunakan text editor (seperti VS Code), lalu sesuaikan konfigurasi database MySQL di komputer baru kamu:
+
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -45,30 +46,51 @@ DB_DATABASE=db_sertifikat_diskominfo
 DB_USERNAME=root
 DB_PASSWORD=
 
-Jalankan migrasi database beserta seeder:
-php artisan migrate --seed
+Pastikan database dengan nama `db_sertifikat_diskominfo` sudah kamu buat sebelumnya di MySQL / phpMyAdmin. Setelah itu, jalankan migrasi database:
 
-Jalankan server lokal Laravel (berjalan di http://localhost:8000):
+php artisan migrate
+
+Jalankan server lokal Laravel:
 php artisan serve
+(Server backend akan berjalan di http://localhost:8000)
 
 ---
 
-### 2. Konfigurasi Frontend (React.js)
-Buka terminal baru (biarkan terminal backend tetap berjalan), arahkan direktori ke folder frontend:
-cd frontend
+3. MEMBUAT AKUN PERTAMA DENGAN LARAVEL TINKER
+Karena database masih kosong setelah migrasi, kamu harus membuat akun administrator pertama kali secara manual menggunakan Laravel Tinker:
 
-Instal seluruh dependensi Node.js:
+- Buka terminal BARU (biarkan terminal server backend yang sedang berjalan tetap terbuka).
+- Masuk ke direktori backend:
+  cd backend
+
+- Masuk ke mode Tinker:
+  php artisan tinker
+
+- Di dalam mode Tinker, copy dan paste perintah untuk membuat akun admin berikut (kamu bisa mengubah nama, username, atau password sesuai keinginan):
+  \App\Models\User::create([
+      'name' => 'Administrator',
+      'username' => 'admin',
+      'password' => bcrypt('password123'),
+      'role' => 'admin'
+  ]);
+
+- Jika berhasil, akan muncul informasi data user yang baru dibuat.
+- Ketik `exit` untuk keluar dari mode Tinker.
+(Sekarang kamu sudah memiliki akun dengan username: admin dan password: password123).
+
+---
+
+4. SETUP SISI FRONTEND (REACT.JS)
+Buka terminal baru lagi, arahkan direktori ke folder frontend, lalu instal dependensinya:
+
+cd frontend
 npm install
 
-Jalankan server pengembangan (Development Server):
+Jalankan server pengembangan frontend:
 npm run dev
-(Aplikasi akan berjalan di http://localhost:5173).
+(Aplikasi frontend akan berjalan di http://localhost:5173)
 
 ---
 
-## 🚀 Cara Penggunaan
-1. Buka browser dan akses tautan frontend: http://localhost:5173
-2. Masuk menggunakan akun administrator atau petugas yang telah terdaftar di database.
-3. Gunakan menu Dashboard untuk melihat grafik analitik serta mengunduh dokumen laporan dalam format PDF.
-4. Gunakan menu Rekap Data untuk melakukan input, update, atau delete data harian.
-5. Gunakan menu Manajemen Pengguna (khusus Admin) untuk menambah akun hak akses baru.
+5. SELESAI
+Buka browser, akses http://localhost:5173, dan login menggunakan akun yang sudah kamu buat di Tinker tadi!
