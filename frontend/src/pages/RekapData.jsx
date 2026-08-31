@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
-import { Edit, Trash2, X } from 'lucide-react';
+import { Edit, Trash2, X, FileText, Database } from 'lucide-react';
 
 export default function RekapData() {
   const [dataRekap, setDataRekap] = useState([]);
@@ -10,17 +10,22 @@ export default function RekapData() {
   const isAdmin = user?.role === 'admin';
 
   const [formData, setFormData] = useState({
-    tanggal: '', jml_permohonan: 0, status_terbit_baru: 0, jml_penolakan: 0, jml_sertifikat_aktif: 0
+    tanggal: '', 
+    terbit_baru: 0, 
+    diperpanjang: 0, 
+    dicabut: 0, 
+    dihentikan: 0
   });
 
-  // State baru untuk mode Edit
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
 
   const fetchRekap = async () => {
     try {
-      const response = await api.get('/rekap-layanan');
-      setDataRekap(response.data.data);
+      const response = await api.get('/sertifikat');
+      // Urutkan data dari yang terbaru ke terlama berdasarkan tanggal
+      const sortedData = response.data.data.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+      setDataRekap(sortedData);
     } catch (error) {
       console.error("Gagal mengambil data", error);
     }
@@ -30,17 +35,12 @@ export default function RekapData() {
     fetchRekap();
   }, []);
 
-  // Fungsi dinamis: Bisa untuk Simpan Baru, bisa untuk Update
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (isEditing) {
-        await api.put(`/rekap-layanan/${editId}`, formData);
-        alert('Data berhasil diperbarui!');
-      } else {
-        await api.post('/rekap-layanan', formData);
-        alert('Data berhasil disimpan!');
-      }
+      await api.post('/sertifikat', formData);
+      alert(isEditing ? 'Data berhasil diperbarui!' : 'Data berhasil disimpan!');
+      
       resetForm();
       fetchRekap();
     } catch (error) {
@@ -48,123 +48,193 @@ export default function RekapData() {
     }
   };
 
-  // Fungsi untuk mengisi form dengan data yang mau diedit
   const handleEdit = (item) => {
     setFormData({
       tanggal: item.tanggal,
-      jml_permohonan: item.jml_permohonan,
-      status_terbit_baru: item.status_terbit_baru,
-      jml_penolakan: item.jml_penolakan,
-      jml_sertifikat_aktif: item.jml_sertifikat_aktif
+      terbit_baru: item.terbit_baru,
+      diperpanjang: item.diperpanjang,
+      dicabut: item.dicabut,
+      dihentikan: item.dihentikan
     });
     setIsEditing(true);
     setEditId(item.id);
   };
 
-  // Fungsi untuk menghapus data
   const handleDelete = async (id) => {
     if (window.confirm('Yakin ingin menghapus rekap data ini?')) {
       try {
-        await api.delete(`/rekap-layanan/${id}`);
+        await api.delete(`/sertifikat/${id}`);
         alert('Data berhasil dihapus!');
-        fetchRekap();
+        fetchRekap(); 
       } catch (error) {
-        alert('Gagal menghapus data!');
+        console.error("Error delete:", error);
+        alert('Gagal menghapus data! Pastikan route DELETE /sertifikat/{id} sudah ada di backend.');
       }
     }
   };
 
-  // Fungsi mengembalikan form ke kondisi kosong
   const resetForm = () => {
-    setFormData({ tanggal: '', jml_permohonan: 0, status_terbit_baru: 0, jml_penolakan: 0, jml_sertifikat_aktif: 0 });
+    setFormData({ tanggal: '', terbit_baru: 0, diperpanjang: 0, dicabut: 0, dihentikan: 0 });
     setIsEditing(false);
     setEditId(null);
   };
 
+  // Helper untuk format tanggal di tabel (contoh: 01 Januari 2026)
+  const formatTanggalTabel = (tanggalStr) => {
+    if (!tanggalStr) return '-';
+    const date = new Date(tanggalStr);
+    return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }).format(date);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">Manajemen Rekap Data</h1>
-        <p className="text-slate-500">
-          {isAdmin ? "Input dan kelola rekapitulasi layanan harian." : "Laporan riwayat data layanan harian."}
-        </p>
+      
+      {/* HEADER HALAMAN */}
+      <div className="flex items-center gap-3 mb-2">
+        <div className="p-2.5 bg-blue-50 text-[#0B4A99] rounded-lg">
+          <FileText size={24} />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Manajemen Rekap Data</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {isAdmin ? "Input dan kelola rekapitulasi layanan sertifikat elektronik." : "Laporan riwayat data layanan sertifikat elektronik."}
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
+        {/* FORM INPUT (KHUSUS ADMIN) */}
         {isAdmin && (
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 col-span-1 h-fit">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-slate-800">
-                {isEditing ? "Edit Data" : "Input Data Baru"}
+            <div className="flex justify-between items-center mb-5 pb-3 border-b border-slate-100">
+              <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <Database size={18} className="text-[#0B4A99]" />
+                {isEditing ? "Edit Data Layanan" : "Input Data Baru"}
               </h2>
               {isEditing && (
-                <button onClick={resetForm} className="text-slate-400 hover:text-red-500" title="Batal Edit">
-                  <X size={20} />
+                <button onClick={resetForm} className="p-1 rounded-md text-slate-400 hover:bg-slate-100 hover:text-red-500 transition-colors" title="Batal Edit">
+                  <X size={18} />
                 </button>
               )}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-600 mb-1">Tanggal</label>
-                <input type="date" required value={formData.tanggal} onChange={(e) => setFormData({...formData, tanggal: e.target.value})} className="w-full p-2 border rounded-lg focus:ring-blue-500" />
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Tanggal Laporan</label>
+                <input 
+                  type="date" required 
+                  value={formData.tanggal} 
+                  onChange={(e) => setFormData({...formData, tanggal: e.target.value})} 
+                  disabled={isEditing} // Tanggal sebaiknya dikunci saat edit agar tidak menimpa data lain
+                  className="w-full p-2.5 border border-slate-300 rounded-md focus:border-[#0B4A99] focus:ring-1 focus:ring-[#0B4A99] outline-none text-sm text-slate-700 disabled:bg-slate-100 disabled:text-slate-500" 
+                />
               </div>
-              <div>
-                <label className="block text-sm text-slate-600 mb-1">Jml Permohonan</label>
-                <input type="number" required min="0" value={formData.jml_permohonan} onChange={(e) => setFormData({...formData, jml_permohonan: e.target.value})} className="w-full p-2 border rounded-lg" />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Terbit Baru</label>
+                  <input 
+                    type="number" required min="0" 
+                    value={formData.terbit_baru} 
+                    onChange={(e) => setFormData({...formData, terbit_baru: e.target.value})} 
+                    className="w-full p-2.5 border border-slate-300 rounded-md focus:border-[#0B4A99] focus:ring-1 focus:ring-[#0B4A99] outline-none text-sm text-slate-700" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Diperpanjang</label>
+                  <input 
+                    type="number" required min="0" 
+                    value={formData.diperpanjang} 
+                    onChange={(e) => setFormData({...formData, diperpanjang: e.target.value})} 
+                    className="w-full p-2.5 border border-slate-300 rounded-md focus:border-[#0B4A99] focus:ring-1 focus:ring-[#0B4A99] outline-none text-sm text-slate-700" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Dicabut</label>
+                  <input 
+                    type="number" required min="0" 
+                    value={formData.dicabut} 
+                    onChange={(e) => setFormData({...formData, dicabut: e.target.value})} 
+                    className="w-full p-2.5 border border-slate-300 rounded-md focus:border-[#0B4A99] focus:ring-1 focus:ring-[#0B4A99] outline-none text-sm text-slate-700" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Dihentikan</label>
+                  <input 
+                    type="number" required min="0" 
+                    value={formData.dihentikan} 
+                    onChange={(e) => setFormData({...formData, dihentikan: e.target.value})} 
+                    className="w-full p-2.5 border border-slate-300 rounded-md focus:border-[#0B4A99] focus:ring-1 focus:ring-[#0B4A99] outline-none text-sm text-slate-700" 
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm text-slate-600 mb-1">Sertifikat Terbit</label>
-                <input type="number" required min="0" value={formData.status_terbit_baru} onChange={(e) => setFormData({...formData, status_terbit_baru: e.target.value})} className="w-full p-2 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm text-slate-600 mb-1">Ditolak</label>
-                <input type="number" required min="0" value={formData.jml_penolakan} onChange={(e) => setFormData({...formData, jml_penolakan: e.target.value})} className="w-full p-2 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm text-slate-600 mb-1">Total Aktif Saat Ini</label>
-                <input type="number" required min="0" value={formData.jml_sertifikat_aktif} onChange={(e) => setFormData({...formData, jml_sertifikat_aktif: e.target.value})} className="w-full p-2 border rounded-lg bg-purple-50" />
-              </div>
-              <button type="submit" className={`w-full text-white font-bold py-2 rounded-lg transition-colors ${isEditing ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'}`}>
+
+              <button 
+                type="submit" 
+                className={`w-full text-white font-bold py-2.5 rounded-md transition-colors mt-2 shadow-sm text-sm ${
+                  isEditing ? 'bg-[#F59E0B] hover:bg-[#D97706]' : 'bg-[#0B4A99] hover:bg-[#083670]'
+                }`}
+              >
                 {isEditing ? "Update Data" : "Simpan Data"}
               </button>
             </form>
           </div>
         )}
 
+        {/* AREA TABEL RIWAYAT */}
         <div className={`bg-white p-6 rounded-xl shadow-sm border border-slate-200 ${isAdmin ? 'col-span-2' : 'col-span-3'}`}>
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Riwayat Data Terakhir</h2>
-          <div className="overflow-x-auto">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-base font-bold text-slate-800">Riwayat Pencatatan</h2>
+            <span className="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+              Total: {dataRekap.length} Hari
+            </span>
+          </div>
+
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
             <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 text-slate-600 font-medium border-b">
+              <thead className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
                 <tr>
-                  <th className="py-3 px-4">Tanggal</th>
-                  <th className="py-3 px-4">Permohonan</th>
-                  <th className="py-3 px-4">Terbit</th>
-                  <th className="py-3 px-4">Ditolak</th>
-                  <th className="py-3 px-4">Total Aktif</th>
-                  {isAdmin && <th className="py-3 px-4 text-center">Aksi</th>}
+                  <th className="py-3.5 px-4 whitespace-nowrap">Tanggal Laporan</th>
+                  <th className="py-3.5 px-4 text-center">Terbit Baru</th>
+                  <th className="py-3.5 px-4 text-center">Diperpanjang</th>
+                  <th className="py-3.5 px-4 text-center">Dicabut</th>
+                  <th className="py-3.5 px-4 text-center">Dihentikan</th>
+                  {isAdmin && <th className="py-3.5 px-4 text-center">Aksi</th>}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {dataRekap.length === 0 ? (
-                  <tr><td colSpan={isAdmin ? "6" : "5"} className="text-center py-8 text-slate-400">Belum ada data.</td></tr>
+                  <tr>
+                    <td colSpan={isAdmin ? "6" : "5"} className="text-center py-10 text-slate-400">
+                      Belum ada data pencatatan yang dimasukkan.
+                    </td>
+                  </tr>
                 ) : (
                   dataRekap.map((item) => (
-                    <tr key={item.id} className="border-b hover:bg-slate-50">
-                      <td className="py-3 px-4 font-medium">{item.tanggal}</td>
-                      <td className="py-3 px-4">{item.jml_permohonan}</td>
-                      <td className="py-3 px-4 text-green-600">{item.status_terbit_baru}</td>
-                      <td className="py-3 px-4 text-red-600">{item.jml_penolakan}</td>
-                      <td className="py-3 px-4 text-purple-600 font-bold">{item.jml_sertifikat_aktif}</td>
+                    <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-3 px-4 font-medium text-slate-800 whitespace-nowrap">
+                        {formatTanggalTabel(item.tanggal)}
+                      </td>
+                      <td className="py-3 px-4 text-center text-slate-600 font-medium">{item.terbit_baru}</td>
+                      <td className="py-3 px-4 text-center text-slate-600 font-medium">{item.diperpanjang}</td>
+                      <td className="py-3 px-4 text-center text-slate-600 font-medium">{item.dicabut}</td>
+                      <td className="py-3 px-4 text-center text-slate-600 font-medium">{item.dihentikan}</td>
                       {isAdmin && (
                         <td className="py-3 px-4 flex justify-center gap-2">
-                          <button onClick={() => handleEdit(item)} className="p-1.5 bg-amber-100 text-amber-600 rounded hover:bg-amber-200" title="Edit">
-                            <Edit size={16} />
+                          <button 
+                            onClick={() => handleEdit(item)} 
+                            className="p-1.5 bg-slate-100 text-slate-600 rounded hover:bg-amber-100 hover:text-amber-700 transition-colors border border-slate-200 hover:border-amber-200" 
+                            title="Edit Data"
+                          >
+                            <Edit size={15} />
                           </button>
-                          <button onClick={() => handleDelete(item.id)} className="p-1.5 bg-red-100 text-red-600 rounded hover:bg-red-200" title="Hapus">
-                            <Trash2 size={16} />
+                          <button 
+                            onClick={() => handleDelete(item.id)} 
+                            className="p-1.5 bg-slate-100 text-slate-600 rounded hover:bg-red-100 hover:text-red-700 transition-colors border border-slate-200 hover:border-red-200" 
+                            title="Hapus Data"
+                          >
+                            <Trash2 size={15} />
                           </button>
                         </td>
                       )}

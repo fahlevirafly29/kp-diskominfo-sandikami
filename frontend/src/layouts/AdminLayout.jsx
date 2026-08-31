@@ -1,112 +1,236 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, LogOut, PieChart, Users, Menu } from 'lucide-react';
-import logoInstansi from '../assets/logo-diskominfo.jpg'; 
+import {
+  Outlet,
+  NavLink,
+  useNavigate,
+} from 'react-router-dom';
+
+import {
+  LayoutDashboard,
+  FileText,
+  LogOut,
+  Users,
+  Menu,
+  ChevronDown,
+  ShieldCheck,
+} from 'lucide-react';
+
+import logoInstansi from '../assets/logo-diskominfo.jpg';
 
 export default function AdminLayout() {
-  // State untuk mengontrol sidebar terbuka/tertutup
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+
   const navigate = useNavigate();
-  
-  // Mengambil data user yang sedang login dari saku browser (localStorage)
+
+  // =========================================================
+  // USER
+  // =========================================================
   const userString = localStorage.getItem('user');
   const user = userString ? JSON.parse(userString) : { name: 'User', role: 'guest' };
 
-  // Fungsi untuk Logout
+  // =========================================================
+  // LOGOUT
+  // =========================================================
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');
   };
 
-  // Mengambil inisial nama
-  const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  // =========================================================
+  // INITIAL USER
+  // =========================================================
+  const getInitials = (name = 'User') => {
+    return name.trim().split(/\s+/).map((n) => n[0]).join('').substring(0, 2).toUpperCase();
+  };
+
+  // =========================================================
+  // MENU
+  // =========================================================
+  const menuItems = [
+    { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { label: 'Rekap Data', path: '/rekap-data', icon: FileText },
+    { label: 'Manajemen Pengguna', path: '/manajemen-pengguna', icon: Users },
+  ];
+
+  // =========================================================
+  // NAVIGATION CLASS
+  // =========================================================
+  const getNavClass = ({ isActive }) => {
+    return `
+      group flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-150
+      ${isActive 
+        ? 'bg-white/10 text-white border-l-2 border-white' 
+        : 'text-blue-100 hover:bg-white/5 hover:text-white border-l-2 border-transparent'}
+    `;
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      
-      {/* SIDEBAR KIRI (Dengan Animasi Buka Tutup) */}
-      <div 
-        className={`bg-slate-900 text-white flex flex-col shadow-xl transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${
-          isSidebarOpen ? 'w-64' : 'w-0'
-        }`}
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
+
+      {/* =====================================================
+          SIDEBAR
+      ====================================================== */}
+      <aside
+        className={`
+          bg-[#0B4A99] text-white flex flex-col shrink-0 overflow-hidden transition-all duration-300 ease-in-out
+          ${isSidebarOpen ? 'w-64' : 'w-[72px]'}
+        `}
       >
-        {/* Inner div w-64 agar konten tidak berantakan saat proses animasi mengecil */}
-        <div className="w-64 flex flex-col h-full">
-            
-            {/* BAGIAN HEADER SIDEBAR (LOGO BULAT) */}
-            <div className="p-6 text-xl font-bold border-b border-slate-800 flex items-center gap-3">
-                <img 
-                    src={logoInstansi} 
-                    alt="Logo Diskominfo" 
-                    className="w-9 h-9 object-contain rounded-full bg-white p-0.5" 
-                />
-                Sandikami
+        {/* ===================================================
+            SIDEBAR HEADER
+        ==================================================== */}
+        <div
+          className={`
+            h-16 border-b border-white/10 flex items-center shrink-0
+            ${isSidebarOpen ? 'justify-between px-4' : 'justify-center'}
+          `}
+        >
+          {isSidebarOpen && (
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Kotak logo diubah menjadi bulat sempurna (rounded-full) */}
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-sm border-2 border-white/20">
+                <img src={logoInstansi} alt="Logo Diskominfo" className="w-full h-full object-cover" />
+              </div>
+              <div className="min-w-0 mt-0.5">
+                <div className="text-[15px] font-bold tracking-wider truncate">SANDIKAMI</div>
+              </div>
             </div>
-            
-            {/* MENU NAVIGASI */}
-            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            <Link to="/dashboard" className="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-lg text-slate-300 transition-colors">
-                <LayoutDashboard size={20} />
-                Dashboard
-            </Link>
-            <Link to="/rekap-data" className="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-lg text-slate-300 transition-colors">
-                <FileText size={20} />
-                Rekap Data
-            </Link>
-            <Link to="/data-penolakan" className="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-lg text-slate-300 transition-colors">
-                <PieChart size={20} />
-                Data Penolakan
-            </Link>
-            
-            {/* MENU MANAJEMEN PENGGUNA */}
-            <Link to="/manajemen-pengguna" className="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-lg text-slate-300 transition-colors">
-                <Users size={20} />
-                Manajemen Pengguna
-            </Link>
-            </nav>
-            
-            {/* TOMBOL KELUAR */}
-            <div className="p-4 border-t border-slate-800">
-            <button onClick={handleLogout} className="flex items-center gap-3 p-3 w-full hover:bg-slate-800 rounded-lg text-red-400 transition-colors">
-                <LogOut size={20} />
-                Keluar
-            </button>
-            </div>
-        </div>
-      </div>
+          )}
 
-      {/* AREA KANAN */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        
-        {/* NAVBAR ATAS */}
-        <header className="h-16 bg-white border-b flex items-center justify-between px-6 shadow-sm shrink-0">
-          
-          {/* Tombol Hamburger di Kiri */}
-          <button 
+          <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors focus:outline-none"
+            className="p-2 rounded-md text-blue-200 hover:bg-white/10 hover:text-white transition-colors focus:outline-none flex-shrink-0"
+            title={isSidebarOpen ? 'Tutup menu' : 'Buka menu'}
           >
-            <Menu size={24} />
+            <Menu size={20} />
           </button>
+        </div>
 
-          {/* Profil Dinamis di Kanan */}
+        {/* ===================================================
+            MENU NAVIGASI
+        ==================================================== */}
+        <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
+          {isSidebarOpen && (
+            <div className="px-3 pb-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-blue-300">Menu Utama</p>
+            </div>
+          )}
+
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink key={item.path} to={item.path} className={getNavClass} title={!isSidebarOpen ? item.label : undefined}>
+                <Icon size={19} strokeWidth={1.8} className="shrink-0" />
+                {isSidebarOpen && <span className="truncate">{item.label}</span>}
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        {/* ===================================================
+            INFORMASI INSTANSI
+        ==================================================== */}
+        {isSidebarOpen && (
+          <div className="px-3 pb-3">
+            <div className="border border-white/10 bg-white/5 rounded-md p-3">
+              <div className="flex items-start gap-2">
+                <ShieldCheck size={16} className="text-blue-200 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-[11px] font-semibold text-white">Persandian & Keamanan Informasi</p>
+                  <p className="text-[10px] text-blue-200 mt-1 leading-relaxed">Sistem monitoring layanan sertifikat elektronik.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================
+            LOGOUT
+        ==================================================== */}
+        <div className="p-3 border-t border-white/10">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 w-full rounded-md text-sm font-medium text-red-200 hover:bg-red-500/10 hover:text-red-100 transition-colors"
+            title={!isSidebarOpen ? 'Keluar' : undefined}
+          >
+            <LogOut size={19} strokeWidth={1.8} className="shrink-0" />
+            {isSidebarOpen && <span>Keluar Sistem</span>}
+          </button>
+        </div>
+      </aside>
+
+      {/* =====================================================
+          AREA KANAN
+      ====================================================== */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+
+        {/* ===================================================
+            HEADER ATAS
+        ==================================================== */}
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0 z-20">
+
           <div className="flex items-center gap-3">
-            <div className="text-sm text-right hidden sm:block">
-              <div className="font-bold text-slate-800">{user.name}</div>
-              <div className="text-xs text-slate-500 capitalize">{user.role}</div>
+            {!isSidebarOpen && (
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors lg:hidden"
+              >
+                <Menu size={20} />
+              </button>
+            )}
+            <div className="hidden md:block">
+              <p className="text-xs text-slate-400">Sistem Informasi</p>
+              <p className="text-sm font-semibold text-slate-700">Monitoring Sertifikat Elektronik</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
-              {getInitials(user.name)}
-            </div>
+          </div>
+
+          {/* =================================================
+              PROFILE
+          ================================================== */}
+          <div className="relative">
+            <button
+              onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+              className="flex items-center gap-3 px-2 py-1.5 rounded-md hover:bg-slate-50 transition-colors focus:outline-none"
+            >
+              <div className="text-right hidden sm:block">
+                <div className="text-sm font-semibold text-slate-700">{user.name}</div>
+                <div className="text-[11px] text-slate-400 capitalize">{user.role}</div>
+              </div>
+              <div className="w-9 h-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-sm font-bold text-[#0B4A99]">
+                {getInitials(user.name)}
+              </div>
+              <ChevronDown size={15} className={`text-slate-400 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* PROFILE DROPDOWN */}
+            {isProfileDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsProfileDropdownOpen(false)} />
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-slate-100">
+                    <p className="text-sm font-semibold text-slate-800">{user.name}</p>
+                    <p className="text-xs text-slate-500 capitalize mt-0.5">{user.role}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut size={16} />
+                    <span>Keluar Sistem</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </header>
 
-        {/* KONTEN HALAMAN */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 relative">
-          <Outlet /> 
+        {/* =====================================================
+            CONTENT
+        ====================================================== */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-7 bg-slate-50">
+          <Outlet />
         </main>
       </div>
     </div>
