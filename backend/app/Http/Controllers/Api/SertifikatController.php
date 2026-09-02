@@ -8,17 +8,18 @@ use Illuminate\Http\Request;
 
 class SertifikatController extends Controller
 {
-    // Mengambil data untuk Grafik & Tabel (Sudah support Filter Tanggal)
+    // Mengambil data untuk Grafik & Tabel (Sudah support Filter Tanggal & Tampil Semua di Awal)
     public function index(Request $request)
     {
         $query = Sertifikat::query();
 
-        // Jika ada filter rentang waktu dari React
-        if ($request->has('start_date') && $request->has('end_date')) {
+        // UBAHAN KECIL: Gunakan filled() bukan has().
+        // Jika form tanggal di React kosong, kondisi ini akan dilewati dan memanggil seluruh data.
+        if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('tanggal', [$request->start_date, $request->end_date]);
         }
 
-        // Urutkan dari tanggal paling lama ke terbaru untuk grafik
+        // Urutkan dari tanggal paling lama ke terbaru untuk sumbu X grafik (biarkan aslinya)
         $data = $query->orderBy('tanggal', 'asc')->get();
 
         return response()->json([
@@ -27,7 +28,7 @@ class SertifikatController extends Controller
         ]);
     }
 
-    // Menyimpan atau Update data harian
+    // Menyimpan atau Update data harian (TIDAK DIUBAH - Sudah Sangat Bagus)
     public function store(Request $request)
     {
         $request->validate([
@@ -56,7 +57,7 @@ class SertifikatController extends Controller
         ]);
     }
 
-    // Menghapus data berdasarkan ID
+    // Menghapus data berdasarkan ID (TIDAK DIUBAH)
     public function destroy($id)
     {
         $sertifikat = Sertifikat::find($id);
