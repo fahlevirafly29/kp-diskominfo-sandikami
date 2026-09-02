@@ -2,64 +2,25 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell,
-  Legend,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, Legend,
 } from 'recharts';
 
 import {
-  FileDown,
-  Calendar,
-  FilePlus,
-  RefreshCcw,
-  XOctagon,
-  Loader2,
-  Lightbulb,
-  List,
-  Database,
-  AlertCircle,
+  FileDown, Calendar, FilePlus, RefreshCcw, XOctagon, Loader2, Lightbulb, List, Database, AlertCircle,
 } from 'lucide-react';
 
 import html2pdf from 'html2pdf.js';
 
-// ============================================================
-// WARNA STATUS (PDF Kedinasan)
-// ============================================================
-const STATUS_COLORS = {
-  terbit: '#0B4A99',
-  diperpanjang: '#16A34A',
-  dicabut: '#D97706',
-  dihentikan: '#DC2626',
-};
-
-// ============================================================
-// WARNA STATUS (UI Web Diskominfo)
-// ============================================================
+const STATUS_COLORS = { terbit: '#0B4A99', diperpanjang: '#16A34A', dicabut: '#D97706', dihentikan: '#DC2626' };
 const UI_COLORS = ['#0088CC', '#10b981', '#f97316', '#ef4444']; 
 
-// ============================================================
-// DASHBOARD
-// ============================================================
 export default function Dashboard() {
   const [dataSertifikat, setDataSertifikat] = useState([]);
-  const [summary, setSummary] = useState({
-    terbit: 0, diperpanjang: 0, dicabut: 0, dihentikan: 0, total: 0,
-  });
+  const [summary, setSummary] = useState({ terbit: 0, diperpanjang: 0, dicabut: 0, dihentikan: 0, total: 0 });
 
-  const [startDate, setStartDate] = useState(() => {
-    const d = new Date();
-    d.setMonth(d.getMonth() - 1);
-    return d.toISOString().split('T')[0];
-  });
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  // PERBAIKAN 1: Kosongkan state awal agar memanggil semua data saat pertama dibuka
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -69,11 +30,9 @@ export default function Dashboard() {
   const printRef = useRef(null);
   const token = localStorage.getItem('token');
 
-  // ============================================================
-  // FETCH DATA
-  // ============================================================
   const fetchData = async () => {
-    if (startDate > endDate) {
+    // PERBAIKAN 2: Validasi hanya berlaku kalau form tanggal diisi
+    if (startDate && endDate && startDate > endDate) {
       setErrorMessage('Tanggal awal tidak boleh lebih besar dari tanggal akhir.');
       return;
     }
@@ -82,9 +41,16 @@ export default function Dashboard() {
       setIsLoading(true);
       setErrorMessage('');
 
+      // PERBAIKAN 3: Jangan kirim parameter jika form kosong
+      const params = {};
+      if (startDate && endDate) {
+        params.start_date = startDate;
+        params.end_date = endDate;
+      }
+
       const response = await axios.get('http://localhost:8000/api/sertifikat', {
         headers: { Authorization: `Bearer ${token}` },
-        params: { start_date: startDate, end_date: endDate },
+        params: params,
       });
 
       const resultData = response.data?.data || [];
@@ -120,9 +86,6 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  // ============================================================
-  // FORMATTING
-  // ============================================================
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -142,7 +105,9 @@ export default function Dashboard() {
     return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short' }).format(date);
   };
 
+  // PERBAIKAN 4: Penyesuaian teks periode jika tidak ada filter
   const getPeriodeLaporan = () => {
+    if (!startDate || !endDate) return 'Semua Waktu (Keseluruhan)';
     const start = new Date(startDate);
     const end = new Date(endDate);
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '-';
@@ -152,9 +117,6 @@ export default function Dashboard() {
     return `${formatDate(startDate)} – ${formatDate(endDate)}`;
   };
 
-  // ============================================================
-  // SORT & ANALISIS
-  // ============================================================
   const sortedData = [...dataSertifikat].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
   const recentData = [...sortedData].reverse().slice(0, 5);
 
@@ -177,9 +139,6 @@ export default function Dashboard() {
     { name: 'Dihentikan', jumlah: summary.dihentikan, colorPDF: STATUS_COLORS.dihentikan, colorUI: UI_COLORS[3] },
   ];
 
-  // ============================================================
-  // EXPORT PDF
-  // ============================================================
   const handleExportPDF = async () => {
     if (isExporting) return;
 
@@ -190,7 +149,7 @@ export default function Dashboard() {
       const element = printRef.current;
       const opt = {
         margin: 0,
-        filename: `Laporan_Sertifikat_${startDate}_sd_${endDate}.pdf`,
+        filename: startDate && endDate ? `Laporan_Sertifikat_${startDate}_sd_${endDate}.pdf` : 'Laporan_Sertifikat_Keseluruhan.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FFFFFF', logging: false },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -206,9 +165,6 @@ export default function Dashboard() {
     }
   };
 
-  // ============================================================
-  // KOMPONEN PENDUKUNG (TOOLTIP & CUSTOM LEGEND)
-  // ============================================================
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload || !payload.length) return null;
     return (
@@ -262,13 +218,9 @@ export default function Dashboard() {
     </div>
   );
 
-  // ============================================================
-  // RETURN UI
-  // ============================================================
   return (
     <div className="space-y-6">
 
-      {/* HEADER YANG SUDAH DIBERSIHKAN */}
       <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Dashboard Sertifikat Elektronik</h1>
@@ -284,9 +236,7 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* FILTER PERIODE COMPACT & TO THE POINT */}
       <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-        
         <div className="flex items-center gap-2">
           <Calendar size={18} className="text-[#0B4A99]" />
           <h2 className="text-sm font-semibold text-slate-800">Periode Data</h2>
@@ -317,17 +267,14 @@ export default function Dashboard() {
             Terapkan
           </button>
         </div>
-
       </div>
 
-      {/* TAMPILAN UPDATE DATA KECIL DI BAWAH FILTER */}
       <div className="flex items-center justify-end px-1">
         <p className="text-xs text-slate-400">
           Data diperbarui: <span className="font-medium text-slate-500">{formatDateTime(lastUpdated)}</span>
         </p>
       </div>
 
-      {/* ERROR MESSAGE */}
       {errorMessage && (
         <div className="border border-red-200 bg-red-50 rounded-md px-4 py-3 flex items-center gap-3">
           <AlertCircle size={18} className="text-red-500" />
@@ -335,7 +282,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* KPI */}
       <div>
         <div className="mb-3">
           <h2 className="text-base font-semibold text-slate-800">Ikhtisar Statistik</h2>
@@ -349,10 +295,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* GRAFIK UI */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-        
-        {/* LINE CHART UI */}
         <div className="bg-white border border-slate-200 rounded-lg p-5">
           <div className="mb-4">
             <h3 className="text-base font-semibold text-slate-800">Tren Pemanfaatan</h3>
@@ -375,7 +318,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* BAR CHART UI */}
         <div className="bg-white border border-slate-200 rounded-lg p-5">
           <div className="mb-4 flex items-center justify-between">
             <div>
@@ -402,7 +344,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* INSIGHT + TABLE */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         <div className="bg-white border border-slate-200 rounded-lg p-5">
           <div className="flex items-center gap-3 mb-4">
@@ -500,7 +441,7 @@ export default function Dashboard() {
             </div>
             <div style={{ backgroundColor: '#F59E0B', color: '#FFFFFF', width: '200px', height: '200px', borderRadius: '50%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', border: '5px solid #FFFFFF' }}>
               <span style={{ fontSize: '17px', marginBottom: '6px' }}>Periode</span>
-              <span style={{ fontSize: '21px', fontWeight: 'bold', padding: '0 15px' }}>{getPeriodeLaporan()}</span>
+              <span style={{ fontSize: '21px', fontWeight: 'bold', padding: '0 15px', textAlign: 'center' }}>{getPeriodeLaporan()}</span>
             </div>
             <div>
               <h2 style={{ fontSize: '17px', fontWeight: 'bold', letterSpacing: '1px', lineHeight: '1.5' }}>BIDANG PERSANDIAN DAN KEAMANAN INFORMASI<br />DINAS KOMUNIKASI DAN INFORMATIKA</h2>
@@ -547,7 +488,6 @@ export default function Dashboard() {
                 <XAxis dataKey="name" tick={{ fill: '#64748B', fontSize: 10 }} tickLine={false} axisLine={false} dy={8} />
                 <YAxis allowDecimals={false} tick={{ fill: '#64748B', fontSize: 10 }} tickLine={false} axisLine={false} width={45} />
                 
-                {/* Custom Legend khusus untuk PDF */}
                 <Legend content={renderCustomLegendPDF} verticalAlign="bottom" height={30} />
 
                 <Bar isAnimationActive={false} dataKey="jumlah" barSize={40} radius={[4, 4, 0, 0]}>
