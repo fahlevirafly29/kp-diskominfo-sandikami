@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -16,21 +16,21 @@ class UserController extends Controller
         return response()->json($users);
     }
 
-    // 2. Menambahkan pengguna baru (Pengganti form Register publik)
+    // 2. Menambahkan pengguna baru
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users',
             'password' => 'required|string|min:6',
-            'role' => 'required|string' // Wajib memilih role (admin/kadis/petugas)
+            'role' => 'required|string|in:admin,kadis,petugas'
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'username' => $request->username,
             'password' => Hash::make($request->password),
-            'role' => $request->role 
+            'role' => $request->role
         ]);
 
         return response()->json([
@@ -39,4 +39,33 @@ class UserController extends Controller
             'data' => $user
         ], 201);
     }
+
+    // 3. Menghapus pengguna
+    public function destroy($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Pengguna tidak ditemukan.'
+            ], 404);
+        }
+
+        // Admin tidak boleh menghapus akun sendiri
+        if ($user->id === auth()->id()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Anda tidak dapat menghapus akun sendiri.'
+            ], 403);
+        }
+
+        $user->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Pengguna berhasil dihapus.'
+        ]);
+    }
 }
+

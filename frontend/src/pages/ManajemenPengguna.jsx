@@ -23,7 +23,7 @@ const ManajemenPengguna = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await axios.get('http://localhost:8000/api/users', config);
+            const response = await axios.get('/api/users', config);
             setUsers(response.data);
         } catch (error) {
             console.error("Gagal mengambil data:", error);
@@ -47,7 +47,7 @@ const ManajemenPengguna = () => {
         setMessage('');
 
         try {
-            await axios.post('http://localhost:8000/api/users', formData, config);
+            await axios.post('/api/users', formData, config);
             setMessage('Akun baru berhasil ditambahkan!');
             setFormData({ name: '', username: '', password: '', role: 'petugas' });
             fetchUsers(); 

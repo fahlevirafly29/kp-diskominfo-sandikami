@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\RekapLayananController;
 use App\Http\Controllers\Api\AlasanPenolakanController;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\SertifikatController; // Tambahan untuk Sertifikat
 
 // Pintu masuk umum (Tidak perlu Kartu Akses/Token)
@@ -40,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/alasan-penolakan/{id}', [AlasanPenolakanController::class, 'destroy']);
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
+	Route::delete('/users/{id}',[UserController::class,'destroy']);
         
         // Route POST dan DELETE Sertifikat agar HANYA Admin yang bisa input & hapus data rekap
         Route::post('/sertifikat', [SertifikatController::class, 'store']);

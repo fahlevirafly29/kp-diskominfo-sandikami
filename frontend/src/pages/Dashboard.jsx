@@ -48,7 +48,7 @@ export default function Dashboard() {
         params.end_date = endDate;
       }
 
-      const response = await axios.get('http://localhost:8000/api/sertifikat', {
+      const response = await axios.get('/api/sertifikat', {
         headers: { Authorization: `Bearer ${token}` },
         params: params,
       });

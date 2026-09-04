@@ -1,16 +1,16 @@
 import axios from 'axios';
 
-// Membuat "kurir" khusus dengan alamat tujuan utama ke Laravel
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api', 
+  baseURL: 'http://172.3.20.162/api',
 });
 
-// Menyelipkan Token otomatis ke dalam setiap pengiriman
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token'); // Cek saku browser, ada token tidak?
+  const token = localStorage.getItem('token');
+
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`; // Kalau ada, tempelkan!
+    config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
