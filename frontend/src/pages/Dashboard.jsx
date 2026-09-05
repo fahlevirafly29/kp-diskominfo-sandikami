@@ -9,8 +9,6 @@ import {
   FileDown, Calendar, FilePlus, RefreshCcw, XOctagon, Loader2, Lightbulb, List, Database, AlertCircle,
 } from 'lucide-react';
 
-import html2pdf from 'html2pdf.js';
-
 const STATUS_COLORS = { terbit: '#0B4A99', diperpanjang: '#16A34A', dicabut: '#D97706', dihentikan: '#DC2626' };
 const UI_COLORS = ['#0088CC', '#10b981', '#f97316', '#ef4444']; 
 
@@ -155,8 +153,10 @@ export default function Dashboard() {
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] },
       };
+	const html2pdfModule = await import('html2pdf.js');
+const html2pdf = html2pdfModule.default;
 
-      await html2pdf().set(opt).from(element).save();
+await html2pdf().set(opt).from(element).save();
     } catch (error) {
       console.error('Gagal export PDF:', error);
       alert('Gagal membuat laporan PDF.');
