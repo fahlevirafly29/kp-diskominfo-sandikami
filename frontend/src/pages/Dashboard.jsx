@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import html2pdf from 'html2pdf.js';
 
 import {
   LineChart,
@@ -274,8 +275,6 @@ export default function Dashboard() {
        * Jadi file PDF yang besar tidak ikut dimuat
        * ketika Dashboard pertama kali dibuka.
        */
-      const html2pdfModule = await import('html2pdf.js');
-      const html2pdf = html2pdfModule.default;
 
       await new Promise((resolve) => setTimeout(resolve, 500));
 

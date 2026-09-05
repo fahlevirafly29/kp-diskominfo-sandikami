@@ -11,25 +11,10 @@ export default defineConfig({
 
   build: {
     modulePreload: false,
-
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: [
-            'react',
-            'react-dom',
-            'react-router-dom',
-          ],
-
-          charts: [
-            'recharts',
-          ],
-
-          icons: [
-            'lucide-react',
-          ],
-        },
-      },
-    },
   },
 })
+
+
+
+
+
