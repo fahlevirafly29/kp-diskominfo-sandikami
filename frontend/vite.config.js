@@ -4,41 +4,32 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
 
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+  },
+
   build: {
-	modulePreload: false,
+    modulePreload: false,
 
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('node_modules/react') ||
-              id.includes('node_modules/react-dom') ||
-              id.includes('node_modules/react-router-dom')) {
-            return 'react'
-          }
+        manualChunks: {
+          vendor: [
+            'react',
+            'react-dom',
+            'react-router-dom',
+          ],
 
-          if (id.includes('node_modules/recharts')) {
-            return 'charts'
-          }
+          charts: [
+            'recharts',
+          ],
 
-          if (id.includes('node_modules/lucide-react')) {
-            return 'icons'
-          }
-
-          if (id.includes('node_modules/html2pdf.js')) {
-            return 'pdf'
-          }
+          icons: [
+            'lucide-react',
+          ],
         },
       },
     },
   },
-
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:8000',
-        changeOrigin: true,
-      },
-    },
-  },
 })
-

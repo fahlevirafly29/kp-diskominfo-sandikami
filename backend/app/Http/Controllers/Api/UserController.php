@@ -9,28 +9,58 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // 1. Menampilkan semua data pengguna untuk Tabel React
+    // =========================================================
+    // CEK ADMIN
+    // =========================================================
+    private function checkAdmin()
+    {
+        $user = auth()->user();
+
+        if (!$user || $user->role !== 'admin') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Akses ditolak. Hanya Admin yang dapat mengelola pengguna.'
+            ], 403);
+        }
+
+        return null;
+    }
+
+    // =========================================================
+    // 1. MENAMPILKAN SEMUA DATA PENGGUNA
+    // =========================================================
     public function index()
     {
+        if ($response = $this->checkAdmin()) {
+            return $response;
+        }
+
         $users = User::all();
+
         return response()->json($users);
     }
 
-    // 2. Menambahkan pengguna baru
+    // =========================================================
+    // 2. MENAMBAHKAN PENGGUNA BARU
+    // =========================================================
     public function store(Request $request)
     {
+        if ($response = $this->checkAdmin()) {
+            return $response;
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users',
             'password' => 'required|string|min:6',
-            'role' => 'required|string|in:admin,kadis,petugas'
+            'role' => 'required|string|in:admin,kadis,petugas',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'username' => $request->username,
             'password' => Hash::make($request->password),
-            'role' => $request->role
+            'role' => $request->role,
         ]);
 
         return response()->json([
@@ -40,9 +70,15 @@ class UserController extends Controller
         ], 201);
     }
 
-    // 3. Menghapus pengguna
+    // =========================================================
+    // 3. MENGHAPUS PENGGUNA
+    // =========================================================
     public function destroy($id)
     {
+        if ($response = $this->checkAdmin()) {
+            return $response;
+        }
+
         $user = User::find($id);
 
         if (!$user) {
@@ -68,4 +104,3 @@ class UserController extends Controller
         ]);
     }
 }
-
